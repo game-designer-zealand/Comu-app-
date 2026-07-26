@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comu-app: Maskiner, Udstyr & Byg Kreta-pas</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #12131c; color: #fff; padding: 20px; }
+        
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        header { 
+            background: linear-gradient(135deg, #4a148c, #7b1fa2); 
+            padding: 25px; 
+            border-radius: 12px; 
+            margin-bottom: 20px; 
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+
+        .wallet-box {
+            background: #1e1f2c;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border: 1px solid #33354a;
+        }
+
+        .balance { font-size: 24px; color: #00e676; font-weight: bold; }
+
+        .btn-input {
+            background: #7c4dff;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-input:hover { background: #651fff; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+
+        .card {
+            background: #1e1f2c;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #2d2f45;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card h3 { color: #ff4081; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .card p { font-size: 13px; color: #b0bec5; margin-bottom: 15px; line-height: 1.4; }
+        .price { font-weight: bold; color: #ffd700; margin-bottom: 12px; font-size: 15px; }
+
+        .buy-btn {
+            background: #e91e63;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .buy-btn:hover { background: #ff4081; }
+
+        .inventory {
+            margin-top: 35px;
+            background: #1e1f2c;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #33354a;
+        }
+
+        .inventory ul { list-style-type: square; padding-left: 20px; color: #00e676; }
+        .inventory li { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📱 Comu-app</h1>
+        <p>Brug dine <b>DK-comuer</b> på maskiner, udstyr og infrastrukturtilladelser!</p>
+    </header>
+
+    <div class="wallet-box">
+        <div>
+            <span>Din Saldo: </span>
+            <span id="comu-balance" class="balance">0</span> <span>DK-comuer</span>
+        </div>
+        <button class="btn-input" onclick="addComuerManually()">+ Indtast / Overfør DK-comuer</button>
+    </div>
+
+    <h2>🛒 Maskiner, Udstyr & Licenser</h2>
+    <br>
+    
+    <div class="grid">
+        <div class="card">
+            <div>
+                <h3>🍋 Citron-Produktion</h3>
+                <p>Nye maskiner, redskaber og udstyr til citrontræer, frugthøst og saftfabrikker på Kreta.</p>
+            </div>
+            <div>
+                <div class="price">Pris: 5 DK-comuer</div>
+                <button class="buy-btn" onclick="buyItem('Citron-Produktionsmaskiner', 5)">Køb Maskiner</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div>
+                <h3>🏨 Hotel & Lejer-Udstyr</h3>
+                <p>Inventar, møbler og faciliteter til firmaers hoteller, lejligheder og udlejningsejendomme.</p>
+            </div>
+            <div>
+                <div class="price">Pris: 10 DK-comuer</div>
+                <button class="buy-btn" onclick="buyItem('Hotel & Resort Udstyrspakke', 10)">Køb Udstyr</button>
+            </div>
+        </div>
+
+        <div class="card" style="border: 2px solid #ffd700;">
+            <div>
+                <h3>🏗️ Byg Kreta-Passet</h3>
+                <p>Låser op for byggeselskaber! Giver rettigheder til at anlægge veje, jernbaner, lufthavne og bygninger på Kreta.</p>
+            </div>
+            <div>
+                <div class="price">Pris: 25 DK-comuer</div>
+                <button class="buy-btn" style="background:#00e676; color:#000;" onclick="buyItem('Byg Kreta-Passet', 25)">Køb Pas</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="inventory">
+        <h3>🎒 Dine Aktive Licenser & Udstyr</h3>
+        <ul id="inventory-list" style="margin-top: 10px;">
+            <li style="color: #aaa; list-style-type: none;"><i>Ingen køb foretaget endnu.</i></li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    let comuBalance = 0;
+    let inventory = [];
+
+    // Læs automatisk overførte coins fra linket (Metode 1)
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const coinsFromGame = urlParams.get('coins');
+        
+        if (coinsFromGame && !isNaN(coinsFromGame) && parseInt(coinsFromGame) > 0) {
+            comuBalance += parseInt(coinsFromGame);
+            updateUI();
+            alert("🎉 Modtog " + coinsFromGame + " DK-comuer fra dit Kreta Firma Designer Simulator!");
+        }
+    });
+
+    // Manuel overførsel
+    function addComuerManually() {
+        let amount = prompt("Hvor mange DK-comuer vil du overføre?", "5");
+        if (amount && !isNaN(amount)) {
+            comuBalance += parseInt(amount);
+            updateUI();
+        }
+    }
+
+    // Køb af genstande
+    function buyItem(itemName, price) {
+        if (comuBalance >= price) {
+            comuBalance -= price;
+            inventory.push(itemName);
+            alert("Køb gennemført! Du har låst op for: " + itemName);
+            updateUI();
+        } else {
+            alert("Du har ikke nok DK-comuer! Du har " + comuBalance + " og skal bruge " + price + ".");
+        }
+    }
+
+    // Opdater skærmen
+    function updateUI() {
+        document.getElementById('comu-balance').innerText = comuBalance;
+        
+        const list = document.getElementById('inventory-list');
+        if (inventory.length === 0) {
+            list.innerHTML = "<li style='color: #aaa; list-style-type: none;'><i>Ingen køb foretaget endnu.</i></li>";
+        } else {
+            list.innerHTML = "";
+            inventory.forEach(item => {
+                let li = document.createElement('li');
+                li.innerText = item;
+                list.appendChild(li);
+            });
+        }
+    }
+</script>
+
+</body>
+</html>
